@@ -79,3 +79,28 @@ export const getProgress = (snapshotId: string) => call<Progress>(`/progress/${s
 
 export const getSnapshot = <T = Record<string, unknown>>(snapshotId: string) =>
   call<T[]>(`/snapshot/${snapshotId}?format=json`);
+
+export interface Balance {
+  /** Available funds, USD. */
+  balance: number;
+  credit: number;
+  prepayment: number;
+  /** Usage that goes on the next invoice, USD. */
+  pendingCosts: number;
+}
+
+/** Account balance. Needs a key with billing access; BRIGHTDATA_BILLING_KEY can be a separate, billing-only key. */
+export async function getBalance(): Promise<Balance> {
+  const res = await fetch('https://api.brightdata.com/customer/balance', {
+    headers: { Authorization: `Bearer ${process.env.BRIGHTDATA_BILLING_KEY || key()}` },
+  });
+  const body = await res.text();
+  if (!res.ok) throw new BrightDataError(`Bright Data ${res.status}: ${body}`.slice(0, 300), res.status);
+  const b = JSON.parse(body);
+  return {
+    balance: Number(b.balance ?? 0),
+    credit: Number(b.credit ?? 0),
+    prepayment: Number(b.prepayment ?? 0),
+    pendingCosts: Number(b.pending_costs ?? b.pending_balance ?? 0),
+  };
+}

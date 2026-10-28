@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { requireAdmin } from '../auth.ts';
+import { BrightDataError, getBalance } from '../brightdata.ts';
+import { db } from '../db.ts';
 import { setPullRules, pullSummary } from '../pulls.ts';
 import { AUTO_PULL_CHOICES, autoPullStatus, setAutoPull } from '../sync.ts';
 
@@ -44,4 +46,27 @@ settingsRouter.patch('/', requireAdmin, (req, res) => {
   const current = autoPullStatus();
   setAutoPull(body.data.autoPullHours ?? current.hours, body.data.autoPullAt ?? current.at);
   res.json({ autoPull: autoPullStatus() });
+});
+
+/** Bright Data balance plus what Pulse pulled this month. Cached for 5 minutes; ?refresh=1 skips the cache. */
+let account: { at: number; value: unknown } | null = null;
+
+settingsRouter.get('/brightdata', requireAdmin, async (req, res) => {
+  if (!account || req.query.refresh === '1' || Date.now() - account.at > 5 * 60_000) {
+    const now = new Date();
+    const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
+    const { records } = db
+      .prepare('SELECT COALESCE(SUM(rc.records), 0) AS records FROM sync_run_contacts rc JOIN sync_runs r ON r.id = rc.run_id WHERE r.created_at >= ?')
+      .get(monthStart) as { records: number };
+    const usage = { recordsThisMonth: records };
+    let value;
+    try {
+      value = { ok: true, ...(await getBalance()), usage, checkedAt: now.toISOString() };
+    } catch (e) {
+      const status = e instanceof BrightDataError ? e.status : undefined;
+      value = { ok: false, reason: status === 401 || status === 403 ? 'permission' : 'error', error: (e as Error).message, usage, checkedAt: now.toISOString() };
+    }
+    account = { at: Date.now(), value };
+  }
+  res.json(account.value);
 });

@@ -21,7 +21,7 @@ npx tsc --noEmit -p web           # type-check the web app
 
 There are no tests or linter; type-checks plus checking in the browser are the verification loop. `.claude/launch.json` has `pulse` and `pulse-demo` preview configs. Use `API_PORT`, not `PORT`, for the API (preview tooling sets `PORT` for the web server). Port 8787 on this machine belongs to another project.
 
-Config lives in `.env` (see `.env.example`): Bright Data key, admin seed credentials (used only on first boot), `NOTION_TOKEN` / `NOTION_ABM_PAGE_ID`, optional `HOST`, `DB_PATH`, `COOKIE_SECURE`.
+Config lives in `.env` (see `.env.example`): Bright Data key (plus optional `BRIGHTDATA_BILLING_KEY` for the balance shown in the Brain), admin seed credentials (used only on first boot), `NOTION_TOKEN` / `NOTION_ABM_PAGE_ID`, optional `HOST`, `DB_PATH`, `COOKIE_SECURE`.
 
 ## Architecture
 

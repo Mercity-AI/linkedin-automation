@@ -24,7 +24,7 @@ Sign in as `pranav@mercity.io`. The first password is `ADMIN_PASSWORD` in `.env`
 | Reply list | Your own list of posts to reply to, with To reply / Done |
 | People | The CRM: filter by owner, tier, persona, LinkedIn connection and status (including Pulled / Not pulled), assign owners (one at a time or in bulk), pull posts |
 | Pulls | Every Bright Data request with per-person results, plus the automatic pull schedule |
-| Brain | Admins only. **Knowledge**: positioning, tone and talking points for reply drafting. **Pull rules**: who gets pulled, plus who is assigned to each company. **Sync & schedule**: Notion sync and automatic pulls |
+| Brain | Admins only. **Knowledge**: positioning, tone and talking points for reply drafting. **Pull rules**: who gets pulled, plus who is assigned to each company. **Sync & schedule**: Notion sync, automatic pulls, the last pull, and Bright Data credits remaining |
 | Team | Admins only: add teammates, generate and reset passwords, deactivate |
 
 Team and Brain sit below a divider in the sidebar. Members can do everything except manage the team, the pull rules and the schedules.
@@ -88,6 +88,7 @@ What testing showed (October 2026):
 | Key | |
 | --- | --- |
 | `BRIGHTDATA_API_KEY` | Bright Data API token |
+| `BRIGHTDATA_BILLING_KEY` | Optional key with billing access, used only to show the remaining balance in the Brain (falls back to `BRIGHTDATA_API_KEY`) |
 | `ADMIN_EMAIL`, `ADMIN_NAME`, `ADMIN_PASSWORD` | Owner account, created on first boot only |
 | `API_PORT` | API port (default 4848) |
 | `HOST` | Bind address (default `127.0.0.1`; use `0.0.0.0` behind a proxy) |

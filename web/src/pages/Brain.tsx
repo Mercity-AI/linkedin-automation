@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react';
-import { Check, Plus, RefreshCw, Trash2 } from 'lucide-react';
+import { ArrowUpRight, Check, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -14,7 +14,7 @@ import { Select, Tooltip } from '@/components/ui/menu';
 import { Skeleton, Segmented, Switch } from '@/components/ui/misc';
 import { Spinner } from '@/components/ui/spinner';
 import type { BrainEntry, NotionSyncResult, PullMode, PullReason, PullRules } from '@/lib/api';
-import { useBrain, useBrainMutation, useCompanies, useNotion, useNotionSync, usePullSummary, useSetNotionHours, useSetPullRules, useSettings, useSyncs, useUpdateCompany } from '@/lib/queries';
+import { useBrain, useBrainMutation, useBrightData, useCompanies, useNotion, useNotionSync, usePullSummary, useSetNotionHours, useSetPullRules, useSettings, useSyncs, useUpdateCompany } from '@/lib/queries';
 import { cn, fmtDateTime, fmtNumber, fmtWhenInline, plural } from '@/lib/utils';
 
 const STARTERS: { title: string; hint: string }[] = [
@@ -331,6 +331,66 @@ function PullsPanel() {
   );
 }
 
+const usd = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+
+function BrightDataPanel() {
+  const { data, refresh } = useBrightData();
+  const used = data && `Pulse pulled ${plural(data.usage.recordsThisMonth, 'record')} this month.`;
+  return (
+    <Panel title="Bright Data credits">
+      {!data ? (
+        <Skeleton className="h-14 w-full" />
+      ) : data.ok ? (
+        <>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="text-2xl font-semibold tracking-[-0.02em] tabular">{usd(data.balance ?? 0)}</div>
+              <div className="text-ink-3">remaining</div>
+            </div>
+            <Tooltip content={`Checked ${fmtWhenInline(data.checkedAt)}`}>
+              <Button size="icon-sm" variant="ghost" aria-label="Refresh balance" loading={refresh.isPending} onClick={() => refresh.mutate()}>
+                {!refresh.isPending && <RefreshCw />}
+              </Button>
+            </Tooltip>
+          </div>
+          <dl className="divide-y divide-line rounded-lg bg-surface-2/70 px-3">
+            {[
+              ['Next invoice so far', data.pendingCosts ?? 0],
+              ...(data.credit ? [['Credit', data.credit] as const] : []),
+              ...(data.prepayment ? [['Prepayment', data.prepayment] as const] : []),
+            ].map(([label, n]) => (
+              <div key={label} className="flex items-center justify-between py-2">
+                <dt className="text-ink-3">{label}</dt>
+                <dd className="tabular">{usd(Number(n))}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="text-ink-3">{used}</p>
+        </>
+      ) : (
+        <>
+          <p className="leading-relaxed text-ink-2">
+            {data.reason === 'permission'
+              ? 'The Bright Data API key can’t read billing. Give it billing access, or add a billing-only key to .env as BRIGHTDATA_BILLING_KEY.'
+              : `Couldn’t read the balance: ${data.error}`}
+          </p>
+          <div className="flex items-center gap-2">
+            {data.reason === 'permission' && (
+              <a href="https://brightdata.com/cp/setting/users" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-medium text-accent hover:underline">
+                Open Bright Data API keys <ArrowUpRight className="size-3.5" />
+              </a>
+            )}
+            <Button size="sm" variant="ghost" className="ml-auto" loading={refresh.isPending} onClick={() => refresh.mutate()}>
+              {!refresh.isPending && <RefreshCw />} Check again
+            </Button>
+          </div>
+          <p className="text-ink-3">{used}</p>
+        </>
+      )}
+    </Panel>
+  );
+}
+
 // --- Pull rules ------------------------------------------------------------------------
 
 const EXCLUDED_LABEL: Partial<Record<PullReason, string>> = {
@@ -557,7 +617,10 @@ export function BrainPage() {
       {tab === 'sync' && (
         <div className="grid items-start gap-4 md:grid-cols-2">
           <NotionPanel />
-          <PullsPanel />
+          <div className="space-y-4">
+            <PullsPanel />
+            <BrightDataPanel />
+          </div>
         </div>
       )}
     </PageBody>

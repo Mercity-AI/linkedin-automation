@@ -306,6 +306,34 @@ export function useSetAutoPull() {
 
 // --- Brain (admins) -----------------------------------------------------------
 
+export interface BrightDataAccount {
+  ok: boolean;
+  /** Why the balance couldn't be read: the key lacks billing access, or something else went wrong. */
+  reason?: 'permission' | 'error';
+  error?: string;
+  balance?: number;
+  credit?: number;
+  prepayment?: number;
+  pendingCosts?: number;
+  usage: { recordsThisMonth: number };
+  checkedAt: string;
+}
+
+export function useBrightData() {
+  const qc = useQueryClient();
+  const query = useQuery({
+    queryKey: ['brightdata'],
+    queryFn: () => api.get<BrightDataAccount>('/settings/brightdata'),
+    staleTime: 5 * 60_000,
+  });
+  const refresh = useMutation({
+    mutationFn: () => api.get<BrightDataAccount>('/settings/brightdata?refresh=1'),
+    onSuccess: (data) => qc.setQueryData(['brightdata'], data),
+    onError: showError,
+  });
+  return { ...query, refresh };
+}
+
 export const useBrain = () =>
   useQuery({ queryKey: ['brain'], queryFn: () => api.get<{ entries: BrainEntry[] }>('/brain').then((r) => r.entries) });
 
