@@ -1,0 +1,176 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/inter';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --bg: #ffffff;
+  --bg-subtle: #fafafa;
+  --surface: #ffffff;
+  --surface-2: #f4f4f5;
+  --surface-3: #ececee;
+  --border: #ececec;
+  --border-strong: #dedede;
+  --ink: #111111;
+  --ink-2: #4d4d4d;
+  --ink-3: #6f6f6f;
+  --ink-4: #a3a3a3;
+  --accent: #0a66c2;
+  --accent-soft: #eaf2fb;
+  --positive: #1d7348;
+  --positive-soft: #e6f4ec;
+  --negative: #b42318;
+  --negative-soft: #fdeceb;
+  --warning: #93520a;
+  --warning-soft: #fcf1df;
+  --shadow-pop: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px -6px rgb(0 0 0 / 0.12);
+  --ring: rgb(10 102 194 / 0.35);
+  color-scheme: light;
+}
+
+.dark {
+  --bg: #0b0b0b;
+  --bg-subtle: #0b0b0b;
+  --surface: #131313;
+  --surface-2: #1b1b1b;
+  --surface-3: #252525;
+  --border: #232323;
+  --border-strong: #303030;
+  --ink: #f1f1f1;
+  --ink-2: #c4c4c4;
+  --ink-3: #959595;
+  --ink-4: #5e5e5e;
+  --accent: #5aa7ee;
+  --accent-soft: #10243a;
+  --positive: #56c58f;
+  --positive-soft: #0f2a1c;
+  --negative: #f4847a;
+  --negative-soft: #2e1412;
+  --warning: #f0b45c;
+  --warning-soft: #2c1f0c;
+  --shadow-pop: 0 1px 2px rgb(0 0 0 / 0.4), 0 12px 32px -8px rgb(0 0 0 / 0.7);
+  --ring: rgb(90 167 238 / 0.45);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --color-bg: var(--bg);
+  --color-bg-subtle: var(--bg-subtle);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--border);
+  --color-line-strong: var(--border-strong);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-ink-4: var(--ink-4);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-positive: var(--positive);
+  --color-positive-soft: var(--positive-soft);
+  --color-negative: var(--negative);
+  --color-negative-soft: var(--negative-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --shadow-pop: var(--shadow-pop);
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  ::selection {
+    background: var(--accent-soft);
+    color: var(--ink);
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  button,
+  [role='button'] {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+  input[type='date']::-webkit-calendar-picker-indicator {
+    opacity: 0.55;
+    cursor: pointer;
+  }
+  .dark input[type='date']::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+  }
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@utility scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+/* Post copy keeps LinkedIn's line breaks. */
+@utility post-copy {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Radix waits for these exit animations before unmounting. */
+@keyframes overlay-in { from { opacity: 0 } to { opacity: 1 } }
+@keyframes overlay-out { from { opacity: 1 } to { opacity: 0 } }
+/* Centering uses the separate `translate` property (Tailwind v4), so these only add the rise + scale. */
+@keyframes dialog-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98) }
+  to { opacity: 1; transform: none }
+}
+@keyframes dialog-out {
+  from { opacity: 1; transform: none }
+  to { opacity: 0; transform: translateY(4px) scale(0.985) }
+}
+@keyframes pop-in { from { opacity: 0; transform: scale(0.96) translateY(-2px) } to { opacity: 1; transform: none } }
+@keyframes pop-out { from { opacity: 1; transform: none } to { opacity: 0; transform: scale(0.97) } }
+@keyframes sheet-in { from { transform: translateX(-100%) } to { transform: none } }
+@keyframes sheet-out { from { transform: none } to { transform: translateX(-100%) } }
+
+@utility anim-overlay {
+  &[data-state='open'] { animation: overlay-in 160ms ease-out }
+  &[data-state='closed'] { animation: overlay-out 140ms ease-in }
+}
+@utility anim-dialog {
+  &[data-state='open'] { animation: dialog-in 220ms var(--ease-out-soft) }
+  &[data-state='closed'] { animation: dialog-out 140ms ease-in }
+}
+@utility anim-pop {
+  transform-origin: var(--radix-popper-transform-origin);
+  &[data-state='open'] { animation: pop-in 160ms var(--ease-out-soft) }
+  &[data-state='closed'] { animation: pop-out 110ms ease-in }
+  &[data-state='delayed-open'] { animation: pop-in 160ms var(--ease-out-soft) }
+}
+@utility anim-sheet {
+  &[data-state='open'] { animation: sheet-in 240ms var(--ease-out-soft) }
+  &[data-state='closed'] { animation: sheet-out 180ms ease-in }
+}
