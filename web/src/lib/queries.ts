@@ -119,7 +119,14 @@ export function usePullScope() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body: { scope: 'eligible' | 'new'; start?: string; end?: string }) =>
-      api.post<{ runId: number | null; skipped: number; excluded: number; people: number }>('/contacts/pull', body),
+      api.post<{
+        runId: number | null;
+        skipped: number;
+        excluded: number;
+        people: number;
+        /** The Notion sync that runs first; null when Notion isn't connected. */
+        notion: { ok: boolean; newPeople: number; error: string | null } | null;
+      }>('/contacts/pull', body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: keys.active });
       invalidateData(qc);

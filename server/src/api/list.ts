@@ -5,20 +5,25 @@ import { getPost, POST_SELECT, serializePost } from './posts.ts';
 /** The signed-in teammate's reply list. */
 export const listRouter = Router();
 
+// To reply: open posts on my list. Done: handled posts on my list, plus every post I've logged a reply on.
+const TODO = "rl.user_id IS NOT NULL AND p.status = 'open'";
+const DONE = `p.status != 'open' AND (rl.user_id IS NOT NULL OR EXISTS (SELECT 1 FROM activities a WHERE a.post_id = p.id AND a.user_id = @me))`;
+
 listRouter.get('/', (req, res) => {
   const done = req.query.view === 'done';
   const rows = db
     .prepare(
-      `${POST_SELECT} WHERE rl.user_id IS NOT NULL AND p.status ${done ? "!= 'open'" : "= 'open'"}
+      `${POST_SELECT} WHERE ${done ? DONE : TODO}
        ORDER BY ${done ? 'COALESCE(p.handled_at, rl.added_at) DESC' : 'COALESCE(p.posted_at, p.first_seen_at) DESC'}`,
     )
     .all({ me: req.user!.id });
   const counts = db
     .prepare(
-      `SELECT SUM(p.status = 'open') AS todo, SUM(p.status != 'open') AS done
-       FROM reply_list rl JOIN posts p ON p.id = rl.post_id WHERE rl.user_id = ?`,
+      `SELECT SUM(${TODO}) AS todo, SUM(${DONE}) AS done
+       FROM posts p LEFT JOIN reply_list rl ON rl.post_id = p.id AND rl.user_id = @me
+       WHERE rl.user_id IS NOT NULL OR EXISTS (SELECT 1 FROM activities a WHERE a.post_id = p.id AND a.user_id = @me)`,
     )
-    .get(req.user!.id) as { todo: number | null; done: number | null };
+    .get({ me: req.user!.id }) as { todo: number | null; done: number | null };
   res.json({ posts: rows.map(serializePost), counts: { todo: counts.todo ?? 0, done: counts.done ?? 0 } });
 });
 

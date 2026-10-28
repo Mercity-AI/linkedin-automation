@@ -19,9 +19,9 @@ Sign in as `pranav@mercity.io`. The first password is `ADMIN_PASSWORD` in `.env`
 
 | Page | What it's for |
 | --- | --- |
-| Overview | Your reply queue, posts this week, 30-day activity, most active people |
-| Feed | Every post and repost, filterable by owner, type, reply status and person. "Add to list" saves a post for later; "Write reply" drafts your reply |
-| Reply list | Your own list of posts to reply to, with To reply / Done |
+| Overview | Your reply queue (original posts from your people that need a reply), posts this week, 30-day activity, most active people |
+| Feed | Posts from people assigned to you by default; switch to reposts, everyone, a reply status or one person. "Add to list" saves a post for later; "Write reply" drafts your reply |
+| Reply list | Your own list of posts to reply to. Done also holds every post you've logged a reply on, so you can edit or delete it |
 | People | The CRM: filter by owner, tier, persona, LinkedIn connection and status (including Pulled / Not pulled), assign owners (one at a time or in bulk), pull posts |
 | Pulls | Every Bright Data request with per-person results, plus the automatic pull schedule |
 | Brain | Admins only. **Knowledge**: positioning, tone and talking points for reply drafting. **Pull rules**: who gets pulled, plus who is assigned to each company. **Sync & schedule**: Notion sync, automatic pulls, the last pull, and Bright Data credits remaining |
@@ -31,7 +31,7 @@ Team and Brain sit below a divider in the sidebar. Members can do everything exc
 
 **⌘K / Ctrl+K** opens the command bar from anywhere: jump to a person or company, open a page or quick view (posts that need your reply, your people, Tier A), or run an action (add people, sync with Notion, switch theme, sign out). People and companies are matched in the browser from the list the app already loads, so typing costs no database queries. Post text is searched on the server only when you pick "Search posts for …".
 
-**Replying.** Use "Write reply" on a post. Your draft saves as you type and shows on the card. "Copy & reply on LinkedIn" copies it to your clipboard, opens the post on LinkedIn ready to paste, and logs the reply on the person's timeline (and in Notion). The toast that follows has **View timeline** and **Undo**. "Log only" records a reply you already posted. Every touch on a timeline can be edited or deleted; deleting also moves the Notion Activity to Notion's trash, and if it was the only reply on a post, the post needs a reply again.
+**Replying.** Use "Write reply" on a post. Your draft saves as you type and shows on the card. "Copy & reply on LinkedIn" copies it to your clipboard, opens the post on LinkedIn ready to paste, and logs the reply on the person's timeline (and in Notion). The toast that follows has **View timeline** and **Undo**. "Log only" records a reply you already posted. Every touch can be edited or deleted, from the person's timeline or the ⋯ on the reply shown under a post; deleting also moves the Notion Activity to Notion's trash, and if it was the only reply on a post, the post needs a reply again.
 
 **Who gets pulled.** Pulls are decided per company, never per person: everyone at a company is pulled, or nobody is. Brain → Pull rules holds the global rules:
 
@@ -41,7 +41,7 @@ Team and Brain sit below a divider in the sidebar. Members can do everything exc
 
 Below the rules, each company has an **Assigned to** teammate (synced with Notion's Account Owner), who replies to everyone at that company unless a person has an owner of their own. Each company can also be set to **Always pull** or **Never pull**, which overrides the rules for everyone there. Admins can set this from a person's page too.
 
-Every pull follows these rules: automatic, "Pull posts", and people picked by hand. Nobody is ever pulled just because they're in the CRM. The **Pull posts** button pulls everyone the rules cover. Its menu also offers **Only new people**: those the rules cover who have never been pulled. A person's page and the People list say why someone isn't pulled. Saved posts stay either way.
+Every pull follows these rules: automatic, "Pull posts", and people picked by hand. Nobody is ever pulled just because they're in the CRM. The **Pull posts** button pulls everyone the rules cover. Its menu also offers **Only new people**: those the rules cover who have never been pulled. Both sync with Notion first, so people just added to the ABM CRM are included (automatic pulls do the same). A person's page and the People list say why someone isn't pulled. Saved posts stay either way.
 
 ## The Notion ABM CRM
 

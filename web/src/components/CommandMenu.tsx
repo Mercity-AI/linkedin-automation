@@ -220,7 +220,7 @@ export function CommandMenu({ user }: { user: User }) {
                       {p.label}
                     </Item>
                   ))}
-                  <Item value="view posts that need your reply" keywords={['queue', 'mine', 'open']} icon={<Newspaper />} onSelect={() => go('/feed?owner=me&status=open')}>
+                  <Item value="view posts that need your reply" keywords={['queue', 'mine', 'open']} icon={<Newspaper />} onSelect={() => go('/feed?status=open')}>
                     Posts that need your reply
                   </Item>
                   <Item value="view your people" keywords={['mine', 'assigned']} icon={<Users />} onSelect={() => go('/people?owner=me')}>
@@ -272,7 +272,7 @@ export function CommandMenu({ user }: { user: User }) {
                     <Command.Item
                       value={`search posts for ${query}`}
                       forceMount
-                      onSelect={() => go(`/feed?q=${encodeURIComponent(query)}`)}
+                      onSelect={() => go(`/feed?q=${encodeURIComponent(query)}&owner=all&kind=all`)}
                       className="flex h-10 cursor-default select-none items-center gap-3 rounded-lg px-2.5 text-[13.5px] text-ink outline-none transition-colors data-[selected=true]:bg-surface-2 [&_svg]:size-4 [&_svg]:text-ink-3"
                     >
                       <Search />

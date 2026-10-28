@@ -55,7 +55,7 @@ export function ReplyListPage() {
               Use “Add to list” on any post you want to come back to. Log your reply here when it’s done.
             </Empty>
           ) : (
-            <Empty title="Nothing done yet">Replies you log from your list show up here.</Empty>
+            <Empty title="Nothing done yet">Posts you’ve replied to show up here, whether or not they were on your list.</Empty>
           )}
         </div>
       ) : (

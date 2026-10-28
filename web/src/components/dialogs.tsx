@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
 import { invalidateData, keys, useMe, usePullScope, usePullSummary, useStartSync, useTeam } from '@/lib/queries';
-import { cn, isoDay, plural } from '@/lib/utils';
+import { cn, fmtWhenInline, isoDay, plural } from '@/lib/utils';
 import { Button } from './ui/button';
 import { Dialog, DialogContent } from './ui/dialog';
 import { Field, Input, Label, Textarea } from './ui/input';
@@ -110,7 +110,12 @@ export function PullPostsDialog({
   }, [preset, start, end, today]);
 
   async function submit() {
-    const res = scope ? await scoped.mutateAsync({ scope, ...range }) : await sync.mutateAsync({ ids: contactIds, ...range });
+    const res = scope
+      ? await scoped.mutateAsync({ scope, ...range })
+      : { ...(await sync.mutateAsync({ ids: contactIds, ...range })), notion: null };
+    const { notion } = res;
+    if (notion?.newPeople) toast.message(`${plural(notion.newPeople, 'new person', 'new people')} from Notion`, { description: 'Added to Pulse before pulling.' });
+    if (notion && !notion.ok) toast.message('Couldn’t reach Notion', { description: 'This pull uses the people Pulse already has.' });
     if (scope && !res.runId && !res.skipped) {
       toast.message('Nobody to pull', { description: scope === 'new' ? 'Everyone the rules cover has been pulled before.' : 'The pull rules don’t cover anyone right now.' });
       onOpenChange(false);
@@ -140,7 +145,7 @@ export function PullPostsDialog({
           <>
             <Button onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button variant="primary" loading={sync.isPending || scoped.isPending} onClick={submit} disabled={preset === 'custom' && (!start || !end || start > end)}>
-              Start pull
+              {scoped.isPending ? 'Checking Notion…' : 'Start pull'}
             </Button>
           </>
         }
@@ -183,9 +188,9 @@ export function PullPostsDialog({
         <div className="mt-4 flex gap-2.5 rounded-lg bg-surface-2 px-3 py-2.5 text-[13px] leading-relaxed text-ink-2">
           <Info className="mt-0.5 size-4 shrink-0 text-ink-3" />
           <p>
-            Each pull sees about the 10 newest posts and reposts on someone’s public LinkedIn activity, which is often just the last week
-            for active posters. A date range only filters those; it can’t reach further back. Pulse keeps everything it has already seen, so
-            pulling regularly builds the history.
+            {scope ? 'Pulse checks Notion for people just added to the ABM CRM first. ' : ''}Each pull sees about the 10 newest posts and
+            reposts on someone’s public LinkedIn activity, often just the last week for active posters. A date range only filters those.
+            Pulse keeps everything it has already seen, so pulling regularly builds the history.
           </p>
         </div>
       </DialogContent>
@@ -312,14 +317,16 @@ export function PullButton({ size = 'md', variant = 'secondary' }: { size?: 'sm'
               <span className="flex-1">Everyone the rules cover</span>
               <span className="tabular text-ink-3">{eligible}</span>
             </MenuItem>
-            <MenuItem onSelect={() => setScope('new')} disabled={!fresh}>
+            {/* Stays enabled at 0: the pull checks Notion for people added since the last sync. */}
+            <MenuItem onSelect={() => setScope('new')}>
               <Sparkles />
               <span className="flex-1">Only new people</span>
               <span className="tabular text-ink-3">{fresh}</span>
             </MenuItem>
             <p className="px-2.5 pb-1.5 pt-1 text-xs leading-relaxed text-ink-3">
-              New people match the rules but have never been pulled.
-              {summary && summary.total > eligible ? ` ${summary.total - eligible} people are left out by the rules.` : ''}
+              New people match the rules but have never been pulled. Counts include Notion as of{' '}
+              {summary?.notionSyncedAt ? `the sync ${fmtWhenInline(summary.notionSyncedAt)}` : 'the last sync'}; pulling checks Notion for
+              anyone added since.
             </p>
             {me?.role === 'admin' && (
               <>

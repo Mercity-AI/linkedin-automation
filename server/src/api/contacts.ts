@@ -4,7 +4,7 @@ import { db } from '../db.ts';
 import { extractProfileSlugs, profileUrl } from '../linkedin.ts';
 import { requestNotionSync } from '../notion.ts';
 import { eligibility, getPullRules, idsForScope, pullSummary, type PullMode } from '../pulls.ts';
-import { startPostsSync, startProfileSync } from '../sync.ts';
+import { refreshFromNotion, startPostsSync, startProfileSync } from '../sync.ts';
 
 export const contactsRouter = Router();
 
@@ -149,15 +149,16 @@ contactsRouter.get('/', (req, res) => {
 /** How many people the pull rules cover, and why the rest are left out. */
 contactsRouter.get('/pull-summary', (_req, res) => res.json(pullSummary()));
 
-/** Pull everyone the rules cover ('eligible'), or only those never pulled yet ('new'). */
+/** Pull everyone the rules cover ('eligible'), or only those never pulled yet ('new'). Syncs Notion first to pick up new people. */
 contactsRouter.post('/pull', async (req, res) => {
   const isoDay = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
   const body = z.object({ scope: z.enum(['eligible', 'new']), start: isoDay.optional(), end: isoDay.optional() }).safeParse(req.body);
   if (!body.success) return res.status(400).json({ error: 'Invalid request' });
+  const notion = await refreshFromNotion('manual', req.user!.name);
   const ids = idsForScope(body.data.scope);
-  if (!ids.length) return res.status(202).json({ runId: null, skipped: 0, excluded: 0, people: 0 });
+  if (!ids.length) return res.status(202).json({ runId: null, skipped: 0, excluded: 0, people: 0, notion });
   const result = await startPostsSync(ids, { start: body.data.start, end: body.data.end }, req.user!.id);
-  res.status(202).json({ ...result, people: ids.length });
+  res.status(202).json({ ...result, people: ids.length, notion });
 });
 
 contactsRouter.get('/:id', (req, res) => {

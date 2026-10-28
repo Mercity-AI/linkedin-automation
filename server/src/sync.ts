@@ -1,7 +1,7 @@
 import { db, getSetting, nowIso, setSetting } from './db.ts';
 import * as bd from './brightdata.ts';
 import { cleanUrl, profileSlug, profileUrl } from './linkedin.ts';
-import { autoNotionSync } from './notion.ts';
+import { autoNotionSync, notionConfigured, syncNotion } from './notion.ts';
 import { ELIGIBILITY_COLUMNS, eligibility, getPullRules, idsForScope, type EligibilityInput } from './pulls.ts';
 
 type Row = Record<string, any>;
@@ -415,10 +415,18 @@ export function autoPullStatus() {
   return { hours, at, lastAt, nextAt: new Date(due ? latest : latest + period).toISOString(), due };
 }
 
+/** Sync with Notion first, so people just added to the ABM CRM are part of the pull. */
+export async function refreshFromNotion(trigger: 'auto' | 'manual', by: string | null = null) {
+  if (!notionConfigured()) return null;
+  const r = await syncNotion(trigger, by);
+  return { ok: r.ok, newPeople: r.pulled?.people.added ?? 0, error: r.error ?? null };
+}
+
 async function autoPull() {
   if (!autoPullStatus().due) return;
-  const ids = idsForScope('eligible');
   setSetting('auto_pull_last_at', nowIso());
+  await refreshFromNotion('auto');
+  const ids = idsForScope('eligible');
   if (!ids.length) return;
   try {
     const { runId } = await startPostsSync(ids, {}, null);

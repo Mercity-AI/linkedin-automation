@@ -28,7 +28,7 @@ import { cn, fmtCompact, fmtDateTime, fmtNumber, fmtWhen, humanizeSlug } from '@
 import { Button } from './ui/button';
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger, Tooltip } from './ui/menu';
 import { Avatar, Pill } from './ui/misc';
-import { ReplyComposer, useSendReply } from './touches';
+import { LoggedReply, ReplyComposer, useSendReply } from './touches';
 
 const URL_RE = /(https?:\/\/[^\s)]+)/g;
 
@@ -443,15 +443,7 @@ export function PostCard({ post, showPerson = true, footerExtra }: { post: Post;
 
       <Comments post={post} />
 
-      {post.status === 'replied' && post.lastTouch?.notes && (
-        <div className="mt-3 rounded-xl bg-positive-soft/50 px-3 py-2 text-[13px]">
-          <div className="text-xs font-medium text-positive">
-            {post.lastTouch.by ?? 'We'} {post.lastTouch.type === 'Post' ? 'reposted with thoughts' : post.lastTouch.type === 'DM' ? 'messaged them' : 'commented'} ·{' '}
-            {fmtWhen(post.lastTouch.at)}
-          </div>
-          <p className="post-copy mt-0.5 line-clamp-3 text-ink-2">{post.lastTouch.notes}</p>
-        </div>
-      )}
+      {post.status === 'replied' && post.lastTouch && <LoggedReply post={post} />}
 
       {post.status === 'open' && post.draft && (
         <button

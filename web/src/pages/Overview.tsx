@@ -125,7 +125,7 @@ export function OverviewPage() {
 
       {/* KPI strip: one divided container */}
       <div className="grid grid-cols-2 divide-line overflow-hidden rounded-2xl border border-line bg-surface [&>*]:border-line max-md:[&>*:nth-child(n+3)]:border-t md:grid-cols-4 md:divide-x [&>*:nth-child(2n)]:border-l md:[&>*:nth-child(2n)]:border-l-0">
-        <Kpi big label="Needs your reply" value={fmtNumber(k?.openMine)} loading={isLoading} sub={k && `${fmtNumber(k.openAll)} across the team`} />
+        <Kpi big label="Needs your reply" value={fmtNumber(k?.openMine)} loading={isLoading} sub={k && `From your ${plural(k.mine, 'person', 'people')} · ${fmtNumber(k.openMineWeek)} this week`} />
         <Kpi label="Posts this week" value={fmtNumber(k?.week)} loading={isLoading} sub={k && <Delta now={k.week} prev={k.prevWeek} since={data?.trackingSince ?? null} />} />
         <Kpi
           label="People tracked"
@@ -189,10 +189,10 @@ export function OverviewPage() {
         <div className="flex items-baseline justify-between px-5 pb-1 pt-5">
           <div>
             <h2 className="text-sm font-semibold">Your queue</h2>
-            <p className="text-[13px] text-ink-3">Newest posts from people assigned to you that still need a reply.</p>
+            <p className="text-[13px] text-ink-3">Newest posts (not reposts) from people assigned to you that still need a reply.</p>
           </div>
           {!!k?.openMine && (
-            <Link to="/feed?owner=me&status=open" className="shrink-0 text-[13px] font-medium text-accent hover:underline">
+            <Link to="/feed?status=open" className="shrink-0 text-[13px] font-medium text-accent hover:underline">
               View all {fmtNumber(k.openMine)}
             </Link>
           )}

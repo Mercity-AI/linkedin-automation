@@ -79,6 +79,8 @@ export interface PullSummary {
   new: number;
   excluded: Partial<Record<PullReason, number>>;
   rules: PullRules;
+  /** Counts include people from the Notion CRM as of this sync. */
+  notionSyncedAt: string | null;
 }
 
 export interface Company {
@@ -176,7 +178,8 @@ export interface Post {
   /** The signed-in teammate's unsent reply to this post. */
   draft: { body: string; touchType: string } | null;
   /** The most recent touch logged against this post (what we replied). */
-  lastTouch: { type: string | null; notes: string | null; by: string | null; at: string } | null;
+  /** The latest touch logged on this post (a comment, a repost with thoughts, a DM). */
+  lastTouch: { id: number; type: string | null; notes: string | null; by: string | null; at: string; inNotion: number } | null;
   contact: {
     id: number;
     slug: string;
@@ -229,7 +232,8 @@ export interface Overview {
     week: number;
     prevWeek: number;
     openMine: number;
-    openAll: number;
+    /** Of openMine, posted in the last 7 days. */
+    openMineWeek: number;
     handledWeek: number;
     listTodo: number;
   };

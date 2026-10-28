@@ -86,5 +86,7 @@ export function pullSummary() {
       if (!c.posts_synced_at) fresh++;
     } else excluded[e.reason] = (excluded[e.reason] ?? 0) + 1;
   }
-  return { total: people.length, eligible, new: fresh, excluded, rules };
+  // Counts are as fresh as the last Notion sync; pulls sync first (see refreshFromNotion).
+  const lastNotion = JSON.parse(getSetting('notion_last_sync') ?? 'null') as { finishedAt?: string } | null;
+  return { total: people.length, eligible, new: fresh, excluded, rules, notionSyncedAt: lastNotion?.finishedAt ?? null };
 }

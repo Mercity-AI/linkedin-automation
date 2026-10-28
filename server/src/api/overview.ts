@@ -16,11 +16,14 @@ overviewRouter.get('/', (req, res) => {
   const mine = one('SELECT COUNT(*) n FROM people WHERE eff_owner_id = ?', me);
   const week = one('SELECT COUNT(*) n FROM posts WHERE posted_at >= ?', isoDaysAgo(7));
   const prevWeek = one('SELECT COUNT(*) n FROM posts WHERE posted_at >= ? AND posted_at < ?', isoDaysAgo(14), isoDaysAgo(7));
-  const openMine = one(
-    "SELECT COUNT(*) n FROM posts p JOIN people c ON c.id = p.contact_id WHERE c.eff_owner_id = ? AND p.status = 'open'",
-    me,
-  );
-  const openAll = one("SELECT COUNT(*) n FROM posts WHERE status = 'open'");
+  // Needs your reply: original posts (not reposts) from people assigned to you, still open.
+  const NEEDS_REPLY = "c.eff_owner_id = @me AND p.status = 'open' AND p.kind = 'post'";
+  const openMine = (db.prepare(`SELECT COUNT(*) n FROM posts p JOIN people c ON c.id = p.contact_id WHERE ${NEEDS_REPLY}`).get({ me }) as { n: number }).n;
+  const openMineWeek = (
+    db
+      .prepare(`SELECT COUNT(*) n FROM posts p JOIN people c ON c.id = p.contact_id WHERE ${NEEDS_REPLY} AND p.posted_at >= @since`)
+      .get({ me, since: isoDaysAgo(7) }) as { n: number }
+  ).n;
   const handledWeek = one("SELECT COUNT(*) n FROM posts WHERE status = 'replied' AND handled_at >= ?", isoDaysAgo(7));
 
   // Daily activity for the last 30 days (UTC days), split by kind so the client can switch series.
@@ -61,7 +64,7 @@ overviewRouter.get('/', (req, res) => {
     }));
 
   const queue = db
-    .prepare(`${POST_SELECT} WHERE c.eff_owner_id = @me AND p.status = 'open' ORDER BY p.posted_at DESC LIMIT 5`)
+    .prepare(`${POST_SELECT} WHERE ${NEEDS_REPLY} ORDER BY p.posted_at DESC LIMIT 5`)
     .all({ me })
     .map(serializePost);
   const listTodo = one(
@@ -79,7 +82,7 @@ overviewRouter.get('/', (req, res) => {
   };
 
   res.json({
-    kpis: { people, unassigned, mine, week, prevWeek, openMine, openAll, handledWeek, listTodo },
+    kpis: { people, unassigned, mine, week, prevWeek, openMine, openMineWeek, handledWeek, listTodo },
     activity,
     active,
     queue,

@@ -14,7 +14,7 @@ export const POST_SELECT = `
          c.role AS c_role, c.company AS c_company,
          c.eff_owner_id AS c_owner_id, o.name AS c_owner_name,
          rl.added_at AS in_list_at, d.body AS draft_body, d.touch_type AS draft_type,
-         (SELECT json_object('type', a.touch_type, 'notes', a.notes, 'by', au.name, 'at', a.occurred_at)
+         (SELECT json_object('id', a.id, 'type', a.touch_type, 'notes', a.notes, 'by', au.name, 'at', a.occurred_at, 'inNotion', a.notion_id IS NOT NULL)
             FROM activities a LEFT JOIN users au ON au.id = a.user_id
            WHERE a.post_id = p.id ORDER BY a.occurred_at DESC LIMIT 1) AS last_touch
   FROM posts p
@@ -66,7 +66,7 @@ export function serializePost(p: any) {
     inList: !!p.in_list_at,
     /** The viewer's unsent reply to this post. */
     draft: p.draft_body ? { body: p.draft_body as string, touchType: (p.draft_type as string) ?? 'Comment' } : null,
-    lastTouch: parseJson(p.last_touch, null) as { type: string; notes: string | null; by: string | null; at: string } | null,
+    lastTouch: parseJson(p.last_touch, null) as { id: number; type: string; notes: string | null; by: string | null; at: string; inNotion: number } | null,
     contact: {
       id: p.contact_id,
       slug: p.c_slug,

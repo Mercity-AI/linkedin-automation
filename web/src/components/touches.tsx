@@ -1,4 +1,4 @@
-import { ArrowUpRight, Eye, MessageSquare, Pencil, Repeat2, Send, Sparkles, Trash2, UserPlus } from 'lucide-react';
+import { ArrowUpRight, Eye, MessageSquare, MoreHorizontal, Pencil, Repeat2, Send, Sparkles, Trash2, UserPlus } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -8,7 +8,7 @@ import { cn, fmtDateTime, fmtWhen, isoDay } from '@/lib/utils';
 import { Button } from './ui/button';
 import { ConfirmDialog, Dialog, DialogContent } from './ui/dialog';
 import { Field, Input, Textarea } from './ui/input';
-import { Tooltip } from './ui/menu';
+import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger, Tooltip } from './ui/menu';
 import { Avatar, Pill, Segmented } from './ui/misc';
 
 /** Touch types mirror the Notion ABM CRM "Activities" database. */
@@ -363,6 +363,91 @@ function TimelineItem({ a }: { a: Activity }) {
         onConfirm={() => del.mutateAsync(a.id).then(() => toast.success(inNotion ? 'Deleted here and in Notion' : 'Deleted'))}
       />
     </li>
+  );
+}
+
+/** The reply logged on a post, shown on its card, with a menu to edit the note or delete the touch. */
+export function LoggedReply({ post }: { post: Post }) {
+  const t = post.lastTouch!;
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(t.notes ?? '');
+  const [confirm, setConfirm] = useState(false);
+  const update = useUpdateActivity();
+  const del = useDeleteActivity();
+  const inNotion = !!t.inNotion;
+  const what = t.type === 'Post' ? 'reposted with thoughts' : t.type === 'DM' ? 'messaged them' : 'commented';
+  const noun = t.type === 'Post' ? 'repost' : t.type === 'DM' ? 'message' : 'comment';
+
+  return (
+    <div className="mt-3 rounded-xl bg-positive-soft/50 py-2 pl-3 pr-1.5 text-[13px]">
+      <div className="flex items-center gap-2">
+        <div className="min-w-0 flex-1 text-xs font-medium text-positive">
+          {t.by ?? 'We'} {what} ·{' '}
+          <Tooltip content={fmtDateTime(t.at)}>
+            <span>{fmtWhen(t.at)}</span>
+          </Tooltip>
+        </div>
+        <Menu>
+          <MenuTrigger asChild>
+            <Button variant="ghost" size="icon-sm" aria-label="Reply actions" className="-my-1 text-positive hover:bg-positive-soft">
+              <MoreHorizontal />
+            </Button>
+          </MenuTrigger>
+          <MenuContent align="end">
+            <MenuItem
+              onSelect={() => {
+                setDraft(t.notes ?? '');
+                setEditing(true);
+              }}
+            >
+              <Pencil /> Edit note
+            </MenuItem>
+            <MenuSeparator />
+            <MenuItem danger onSelect={() => setConfirm(true)}>
+              <Trash2 /> Delete {noun}
+            </MenuItem>
+          </MenuContent>
+        </Menu>
+      </div>
+      {editing ? (
+        <div className="mt-1.5 pr-1.5">
+          <Textarea autoFocus rows={3} value={draft} onChange={(e) => setDraft(e.target.value)} className="resize-none bg-surface text-[13px]" />
+          <div className="mt-2 flex justify-end gap-2">
+            <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              variant="primary"
+              loading={update.isPending}
+              onClick={() =>
+                update.mutate(
+                  { id: t.id, notes: draft.trim() || null },
+                  { onSuccess: () => (setEditing(false), toast.success(inNotion ? 'Saved here and in Notion' : 'Saved')) },
+                )
+              }
+            >
+              Save
+            </Button>
+          </div>
+        </div>
+      ) : (
+        t.notes && <p className="post-copy mt-0.5 line-clamp-3 pr-1.5 text-ink-2">{t.notes}</p>
+      )}
+      <ConfirmDialog
+        open={confirm}
+        onOpenChange={setConfirm}
+        title={`Delete this ${noun}?`}
+        description={
+          <>
+            It’s removed from Pulse{inNotion ? ' and moved to the trash in Notion' : ''}. If it was the only reply on this post, the post goes
+            back to needing a reply.
+          </>
+        }
+        confirmLabel="Delete"
+        onConfirm={() => del.mutateAsync(t.id).then(() => toast.success(inNotion ? 'Deleted here and in Notion' : 'Deleted'))}
+      />
+    </div>
   );
 }
 

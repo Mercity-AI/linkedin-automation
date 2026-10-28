@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { SearchInput, useOwnerOptions, useParamState } from '@/components/filters';
 import { PageBody, PageHeader } from '@/components/Layout';
 import { PostCard, PostCardSkeleton } from '@/components/PostCard';
-import { buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/menu';
 import { Avatar, Empty, Segmented } from '@/components/ui/misc';
 import { useContacts, usePosts } from '@/lib/queries';
@@ -20,8 +20,9 @@ const STATUS = [
 
 export function FeedPage() {
   const [q, setQ] = useParamState('q', '');
-  const [kind, setKind] = useParamState<'all' | 'post' | 'repost'>('kind', 'all');
-  const [owner, setOwner] = useParamState('owner', 'all');
+  // By default: original posts from the people assigned to you.
+  const [kind, setKind] = useParamState<'all' | 'post' | 'repost'>('kind', 'post');
+  const [owner, setOwner] = useParamState('owner', 'me');
   const [status, setStatus] = useParamState('status', 'all');
   const [contact, setContact] = useParamState('contact', '');
   const ownerOptions = useOwnerOptions();
@@ -52,7 +53,7 @@ export function FeedPage() {
     return () => io.disconnect();
   }, [posts]);
 
-  const filtered = !!(q || kind !== 'all' || owner !== 'all' || status !== 'all' || contact);
+  const filtered = !!(q || kind !== 'post' || owner !== 'me' || status !== 'all' || contact);
 
   return (
     // 680 feed + 32 gap + 280 rail = 992, plus 64 padding: header and columns share one left edge.
@@ -63,7 +64,7 @@ export function FeedPage() {
           posts.isLoading
             ? 'Loading posts…'
             : total
-              ? `${fmtNumber(total)} ${total === 1 ? 'post' : 'posts'}${filtered ? ' match these filters' : ' from everyone you track'}`
+              ? `${fmtNumber(total)} ${total === 1 ? 'post' : 'posts'}${filtered ? ' match these filters' : ' from people assigned to you'}`
               : 'Nothing here yet'
         }
       />
@@ -107,14 +108,12 @@ export function FeedPage() {
                 <Empty title="No posts match these filters">Try another status or owner, or clear the search.</Empty>
               ) : (
                 <Empty
-                  title="No posts yet"
+                  title="No posts from your people yet"
                   action={
-                    <Link to="/people" className={buttonVariants({ variant: 'primary' })}>
-                      Add people to track
-                    </Link>
+                    <Button onClick={() => setOwner('all')}>See everyone’s posts</Button>
                   }
                 >
-                  Add LinkedIn profiles on the People page and pull their posts. They’ll show up here.
+                  Posts from people assigned to you show up here. Assign people on the People page.
                 </Empty>
               )}
             </div>
